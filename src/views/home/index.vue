@@ -1,10 +1,9 @@
 <template>
   <div class="container">
     <van-tabs swipeable v-model="activeIndex">
-      <van-tab :title="'我爱的人' +  item" v-for="item in 10" :key="item">
-         <ArticleList></ArticleList>
+      <van-tab :title="channel.name" v-for="channel in channels" :key="channel.id">
+        <ArticleList></ArticleList>
       </van-tab>
-
     </van-tabs>
     <span class="bar_btn">
       <van-icon name="wap-nav" />
@@ -14,15 +13,28 @@
 
 <script>
 import ArticleList from './components/article-list'
+import { getMyChannels } from '@/api/channels'
 export default {
   name: 'home', // devtools查看组件时  可以看到 对应的name名称
   data () {
     return {
-      activeIndex: 0 // 默认启动第0个标签
+      activeIndex: 0, // 默认启动第0个标签
+      channels: [] // 用作接收频道
     }
   },
   components: {
     ArticleList
+  },
+  methods: {
+    async getMyChannels () {
+      // 获取频道列表
+      let data = await getMyChannels()
+      this.channels = data.channels // 将data里面的方法里面的channles赋值给网页
+    }
+  },
+  // 在生命周期created中调用该方法
+  created () {
+    this.getMyChannels()
   }
 }
 </script>
