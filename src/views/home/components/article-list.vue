@@ -10,23 +10,23 @@
         @load="onLoad"
       >
         <!-- v-for 渲染数据 -->
-        <van-cell v-for="lists in list" :key="lists">
+        <van-cell v-for="lists in list" :key="lists.art_id.toString()">
           <div class="article_item">
-            <h3 class="van-ellipsis">PullRefresh下拉刷新PullRefresh下拉刷新下拉刷新下拉刷新</h3>
+            <h3 class="van-ellipsis">{{ lists.title }}</h3>
             <!-- 三图模式 -->
-            <div class="img_box">
-              <van-image class="w33" fit="cover" src="https://img.yzcdn.cn/vant/cat.jpeg" />
-              <van-image class="w33" fit="cover" src="https://img.yzcdn.cn/vant/cat.jpeg" />
-              <van-image class="w33" fit="cover" src="https://img.yzcdn.cn/vant/cat.jpeg" />
+            <div class="img_box" v-if="lists.cover.type === 3">
+              <van-image class="w33" fit="cover" src="lists.cover.images[0]" />
+              <van-image class="w33" fit="cover" src="lists.cover.images[1]" />
+              <van-image class="w33" fit="cover" src="lists.cover.images[2]" />
             </div>
             <!--  单图模式 -->
-            <div class="img_box">
-              <van-image class="w100" fit="cover" src="https://img.yzcdn.cn/vant/cat.jpeg" />
+            <div class="img_box" v-else-if="lists.cover.type === 1">
+              <van-image class="w100" fit="cover" src="lists.cover.images[0]" />
             </div>
             <div class="info_box">
-              <span>你像一阵风</span>
-              <span>8评论</span>
-              <span>10分钟前</span>
+              <span>{{lists.aut_name}}</span>
+              <span>{{lists.comm_count}}</span>
+              <span>{{lists.pubdate}}</span>
               <span class="close">
                 <van-icon name="cross"></van-icon>
               </span>
@@ -39,6 +39,7 @@
 </template>
 
 <script>
+import { getArticles } from '@/api/article'
 export default {
   name: 'article-list',
   data () {
@@ -60,20 +61,34 @@ export default {
   },
   methods: {
     // 上拉加载方法
-    onLoad () {
-      setTimeout(() => {
-        if (this.list.length < 50) {
-          let arr = Array.from(
-            Array(10),
-            (value, index) => index + this.list.length + 1
-          )
-          this.list.push(...arr) // 把生成的数据追加到末尾
-          this.upLoading = false // 关闭状态
-        } else {
-          // 停止追加
-          this.finished = true
-        }
-      }, 1000)
+    async onLoad () {
+      // setTimeout(() => {
+      //   if (this.list.length < 50) {
+      //     let arr = Array.from(
+      //       Array(10),
+      //       (value, index) => index + this.list.length + 1
+      //     )
+      //     this.list.push(...arr) // 把生成的数据追加到末尾
+      //     this.upLoading = false // 关闭状态
+      //   } else {
+      //     // 停止追加
+      //     this.finished = true
+      //   }
+      // }, 1000)
+      let data = await getArticles({
+        channel_id: this.channel_id,
+        timestamp: this.timestamp || Date.now()
+      })
+      // 追加数据到队尾
+      this.list.push(...data.results)
+      // 关闭加载状态
+      this.upLoading = false
+      if (data.pre_timestamp) {
+        // 如果有
+        this.timestamp = data.pre_timestamp
+      } else {
+        this.finished = true // 没有数据了
+      }
     },
     // 下拉加载方法
     onRefresh () {
