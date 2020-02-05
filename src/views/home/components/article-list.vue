@@ -3,7 +3,12 @@
   <!-- 阅读记忆 => 看文章看到一半 滑到中部 去了别的页面 当你回来时 文章还在你看的位置 -->
   <div class="scroll-wrapper">
     <van-pull-refresh v-model="isLoading" @refresh="onRefresh" :success-text="xx">
-      <van-list v-model="upLoading" :finished="finished" finished-text="傻逼，到底了" @load="onLoad">
+      <van-list
+        v-model="upLoading"
+        :finished="finished"
+        finished-text="傻逼陈金凤，到底了别刷新了"
+        @load="onLoad"
+      >
         <!-- v-for 渲染数据 -->
         <van-cell v-for="lists in list" :key="lists">
           <div class="article_item">
@@ -42,7 +47,15 @@ export default {
       finished: false, // 是否加载完成
       list: [], // 定义一个数组，来接收加载得数据
       isLoading: false, // 是否开启下拉刷新
-      xx: '' // 下拉成功显示得文本
+      xx: '', // 下拉成功显示得文本
+      timestamp: null // 定义一个时间戳 这个时间戳用来告诉服务器 现在我要求什么样的时间戳
+    }
+  },
+  props: {
+    channel_id: {
+      type: Number, // 指定要传的props类型
+      required: true, // 要求props必须传
+      default: null // 给props的一个默认值。如果required为true，这就填null
     }
   },
   methods: {
