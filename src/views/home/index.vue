@@ -10,7 +10,7 @@
     </span>
     <!-- 放置弹窗组件 -->
     <van-popup :style="{ width: '80%' }" v-model="showMoreAction">
-      <more-action ></more-action>
+      <more-action @dislike="dislike" ></more-action>
     </van-popup>
   </div>
 </template>
@@ -19,13 +19,16 @@
 import ArticleList from './components/article-list'
 import { getMyChannels } from '@/api/channels'
 import MoreAction from './components/more-action'
+import { disLikeArticle } from '@/api/article'
+import eventBus from '@/utils/eventBus'
 export default {
   name: 'home', // devtools查看组件时  可以看到 对应的name名称
   data () {
     return {
       activeIndex: 0, // 默认启动第0个标签
       channels: [], // 用作接收频道
-      showMoreAction: false // 控制反馈组件显示隐藏
+      showMoreAction: false, // 控制反馈组件显示隐藏
+      articleId: null // 定义一个值接收
     }
   },
   components: {
@@ -39,8 +42,24 @@ export default {
       this.channels = data.channels // 将data里面的方法里面的channles赋值给网页
     },
     // 监听子组件触发事件，打开弹窗
-    openMoreAction () {
+    openMoreAction (artId) {
       this.showMoreAction = true
+      this.articleId = artId
+    },
+    // 不喜欢文章
+    async dislike () {
+      try {
+        if (this.articleId) {
+          await disLikeArticle({
+            target: this.articleId
+          })
+          this.$gnotify({ type: 'success', message: '操作成功' })
+          eventBus.$emit('delArticle', this.articleId, this.channels[this.activeIndex].id)
+          this.showMoreAction = false
+        }
+      } catch (error) {
+        this.$gnotify({ type: 'danger', message: '操作失败' })
+      }
     }
   },
   // 在生命周期created中调用该方法

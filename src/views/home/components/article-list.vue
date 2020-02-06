@@ -29,7 +29,7 @@
               <span>{{article.pubdate | relTime }}</span>
               <!-- 判断是否显示查号 -->
               <!-- 点击叉号，要告诉父组件 我要反馈 -->
-              <span class="close"  v-if="user.token" @click="$emit('showAction')">
+              <span class="close"  v-if="user.token" @click="$emit('showAction',article.art_id.toString())">
                 <van-icon name="cross"></van-icon>
               </span>
             </div>
@@ -43,6 +43,7 @@
 <script>
 import { getArticles } from '@/api/article'
 import { mapState } from 'vuex'
+import eventBus from '@/utils/eventBus'
 export default {
   name: 'article-list',
   data () {
@@ -61,6 +62,19 @@ export default {
       required: true, // 要求props必须传
       default: null // 给props的一个默认值。如果required为true，这就填null
     }
+  },
+  created () {
+    // 开启监听
+    eventBus.$on('delArticle', (articleId, channelId) => {
+      if (this.channel_id === channelId) {
+        // 这个条件表示 该列表就是当前激活的列表
+        let index = this.articles.findIndex(item => item.art_id.toString() === articleId) // 查找对应的文章
+        // 如果index大于 -1 表示找到了 就要删除
+        if (index > -1) {
+          this.articles.splice(index, 1) // 删除不喜欢的文章
+        }
+      }
+    })
   },
   // 映射vuex中得store对象到计算属性上
   computed: {
