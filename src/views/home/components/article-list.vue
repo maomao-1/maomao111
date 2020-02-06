@@ -10,24 +10,26 @@
         @load="onLoad"
       >
         <!-- v-for 渲染数据 -->
-        <van-cell v-for="lists in list" :key="lists.art_id.toString()">
+        <van-cell v-for="article in articles" :key="article.art_id.toString()">
           <div class="article_item">
-            <h3 class="van-ellipsis">{{ lists.title }}</h3>
+            <h3 class="van-ellipsis">{{ article.title }}</h3>
             <!-- 三图模式 -->
-            <div class="img_box" v-if="lists.cover.type === 3">
-              <van-image class="w33" fit="cover" src="lists.cover.images[0]" />
-              <van-image class="w33" fit="cover" src="lists.cover.images[1]" />
-              <van-image class="w33" fit="cover" src="lists.cover.images[2]" />
+            <div class="img_box" v-if="article.cover.type === 3">
+              <van-image lazy-load class="w33" fit="cover" :src="article.cover.images[0]" />
+              <van-image lazy-load class="w33" fit="cover" :src="article.cover.images[1]" />
+              <van-image lazy-load class="w33" fit="cover" :src="article.cover.images[2]" />
             </div>
             <!--  单图模式 -->
-            <div class="img_box" v-else-if="lists.cover.type === 1">
-              <van-image class="w100" fit="cover" src="lists.cover.images[0]" />
+            <div class="img_box" v-else-if="article.cover.type === 1">
+              <van-image lazy-load class="w100" fit="cover" :src="article.cover.images[0]" />
             </div>
             <div class="info_box">
-              <span>{{lists.aut_name}}</span>
-              <span>{{lists.comm_count}}</span>
-              <span>{{lists.pubdate}}</span>
-              <span class="close">
+              <span>{{article.aut_name}}</span>
+              <span>{{article.comm_count}}</span>
+              <span>{{article.pubdate | relTime }}</span>
+              <!-- 判断是否显示查号 -->
+              <!-- 点击叉号，要告诉父组件 我要反馈 -->
+              <span class="close"  v-if="user.token" @click="$emit('showAction')">
                 <van-icon name="cross"></van-icon>
               </span>
             </div>
@@ -40,13 +42,14 @@
 
 <script>
 import { getArticles } from '@/api/article'
+import { mapState } from 'vuex'
 export default {
   name: 'article-list',
   data () {
     return {
       upLoading: false, // 是否加载数据
       finished: false, // 是否加载完成
-      list: [], // 定义一个数组，来接收加载得数据
+      articles: [], // 定义一个数组，来接收加载得数据
       isLoading: false, // 是否开启下拉刷新
       xx: '', // 下拉成功显示得文本
       timestamp: null // 定义一个时间戳 这个时间戳用来告诉服务器 现在我要求什么样的时间戳
@@ -59,9 +62,14 @@ export default {
       default: null // 给props的一个默认值。如果required为true，这就填null
     }
   },
+  // 映射vuex中得store对象到计算属性上
+  computed: {
+    ...mapState(['user'])
+  },
   methods: {
     // 上拉加载方法
     async onLoad () {
+      await this.$sleep() // 等待时间
       // setTimeout(() => {
       //   if (this.list.length < 50) {
       //     let arr = Array.from(
@@ -80,7 +88,7 @@ export default {
         timestamp: this.timestamp || Date.now()
       })
       // 追加数据到队尾
-      this.list.push(...data.results)
+      this.articles.push(...data.results)
       // 关闭加载状态
       this.upLoading = false
       if (data.pre_timestamp) {
@@ -91,13 +99,30 @@ export default {
       }
     },
     // 下拉加载方法
-    onRefresh () {
-      setTimeout(() => {
-        let arr = Array.from(Array(10), (value, index) => '爱情' + (index + 1))
-        this.list.unshift(...arr) // 将数据添加到队首
-        this.isLoading = false // 关掉下拉状态
-        this.xx = `更新了${arr.length}条数据`
-      }, 1000)
+    async onRefresh () {
+      await this.$sleep()
+      // setTimeout(() => {
+      //   let arr = Array.from(Array(10), (value, index) => '爱情' + (index + 1))
+      //   this.list.unshift(...arr) // 将数据添加到队首
+      //   this.isLoading = false // 关掉下拉状态
+      //   this.xx = `更新了${arr.length}条数据`
+      // }, 1000)
+      const data = await getArticles({ channel_id: this.channel_id, timestamp: Date.now() })
+      this.isLoading = false // 关掉下拉状态
+      // 有可能 最新没有推荐数据
+      if (data.results.length) {
+        // 如果长度大于0 表示有数据
+        this.articles = data.results // 将历史数据全都覆盖掉了
+        // 假如你之前 已经将 上拉加载设置成finished设置成true了
+        // 表示 我们还需要继续往下拉 就需要把原来的状态再次打开
+        this.finished = false
+        // 注意我们依然需要获取此次的历史事件戳
+        this.timestamp = data.pre_timestamp // 赋值历史时间戳 因为当你下拉刷新之后 上拉加载的时候 要用到这个历史事件戳
+        this.xx = `更新了${data.results.length}条数据`
+      } else {
+      //  如果没有数据更新  什么都不需要变化
+        this.xx = '已是最新数据'
+      }
     }
   }
 }
