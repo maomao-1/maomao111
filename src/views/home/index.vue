@@ -4,14 +4,20 @@
       <van-tab :title="channel.name" v-for="channel in channels" :key="channel.id">
         <article-list @showAction="openMoreAction" :channel_id="channel.id" ></article-list>
       </van-tab>
+      <!-- 显示编辑频道得图标 -->
     </van-tabs>
-    <span class="bar_btn">
+    <span class="bar_btn"  @click="showChannelEdit=true">
       <van-icon name="wap-nav" />
     </span>
     <!-- 放置弹窗组件 -->
     <van-popup :style="{ width: '80%' }" v-model="showMoreAction">
       <more-action @dislike="dislikeOrReport($event,'dislike')" @report="dislikeOrReport($event,'report')"></more-action>
     </van-popup>
+    <!-- 编辑频道 -->
+    <van-action-sheet :round="false" title="编辑频道" v-model="showChannelEdit">
+      <!-- 放置频道 -->
+      <channel-edit></channel-edit>
+ </van-action-sheet><channel-edit v-model="showChannelEdit"></channel-edit>
   </div>
 </template>
 
@@ -21,6 +27,7 @@ import { getMyChannels } from '@/api/channels'
 import MoreAction from './components/more-action'
 import { disLikeArticle, reportArticle } from '@/api/article'
 import eventBus from '@/utils/eventBus'
+import channelEdit from './components/channel-edit'
 export default {
   name: 'home', // devtools查看组件时  可以看到 对应的name名称
   data () {
@@ -28,12 +35,14 @@ export default {
       activeIndex: 0, // 默认启动第0个标签
       channels: [], // 用作接收频道
       showMoreAction: false, // 控制反馈组件显示隐藏
-      articleId: null // 定义一个值接收
+      articleId: null, // 定义一个值接收
+      showChannelEdit: false // 设置频道编辑一开始不显示
     }
   },
   components: {
     ArticleList,
-    MoreAction
+    MoreAction,
+    channelEdit
   },
   methods: {
     async getMyChannels () {
@@ -126,6 +135,18 @@ export default {
     z-index: 1000;
     &::before {
       font-size: 20px;
+    }
+  }
+}
+// 编辑频道面板得样式
+.van-action-sheet {
+  max-height: 100%;
+  height: 100%;
+  .van-action-sheet__header {
+    background: #3296fa;
+    color: #fff;
+    .van-icon-close {
+      color: #fff;
     }
   }
 }
