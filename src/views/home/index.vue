@@ -16,7 +16,7 @@
     <!-- 编辑频道 -->
     <van-action-sheet :round="false" title="编辑频道" v-model="showChannelEdit">
       <!-- 放置频道 -->
-      <channel-edit></channel-edit>
+      <channel-edit :channels="channels"></channel-edit>
  </van-action-sheet><channel-edit v-model="showChannelEdit"></channel-edit>
   </div>
 </template>
