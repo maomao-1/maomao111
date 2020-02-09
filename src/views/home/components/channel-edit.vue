@@ -9,16 +9,16 @@
       </div>
       <van-grid class="van-hairline--left">
         <van-grid-item v-for="(channel,i) in channels" :key="channel.id">
-          <span class="f12">{{channel.name}}</span>
+          <span :class="{red: i === activeIndex}" @click="$emit('selectChannel', channel.id)" class="f12">{{channel.name}}</span>
           <van-icon v-if="i!==0" v-show="editing" class="btn" name="cross"></van-icon>
         </van-grid-item>
       </van-grid>
     </div>
-    <div class="channel">
+     <div class="channel">
       <div class="tit">可选频道：</div>
       <van-grid class="van-hairline--left">
-        <van-grid-item v-for="index in 8" :key="index">
-          <span class="f12">频道{{index}}</span>
+        <van-grid-item v-for="channel in optionalChannels" :key="channel.id">
+          <span  class="f12">{{channel.name}}</span>
           <van-icon class="btn" name="plus"></van-icon>
         </van-grid-item>
       </van-grid>
@@ -27,20 +27,40 @@
 </template>
 
 <script>
+import { getAllChannels } from '@/api/channels'
 export default {
   data () {
     return {
-      editing: false // 是否正在编辑
+      editing: false, // 是否正在编辑
+      allChannels: [] // 用来接收所有得频道
     }
   },
   props: {
     channels: {
-
       type: Array,
       default: () => []
+    },
+    activeIndex: {
+      type: Number
     }
+  },
+  methods: {
+    async getAllChannels () {
+      let data = await getAllChannels()
+      this.allChannels = data.channels
+    }
+  },
+  computed: {
+    // 可用频道
+    optionalChannels () {
+      return this.allChannels.filter(item => !this.channels.some(o => o.id === item.id))
+    }
+  },
+  created () {
+    this.getAllChannels()
   }
 }
+
 </script>
 
 <style lang='less' scoped>
